@@ -31,11 +31,11 @@ def main():
     enc.fit(trainset)
     X_train = enc.transform(trainset)
 
-    # # train logistic regression with cross-validation for error checking
-    # logging.info('cross-validating logistic regression...')
-    # modelcv = LogisticRegressionCV(cv=3)
-    # modelcv.fit(X_train, y_truth)
-    # logging.info('cross-validation score is '+ str(modelcv.scores_))
+    # train logistic regression with cross-validation for error checking
+    logging.info('cross-validating logistic regression...')
+    modelcv = LogisticRegressionCV(cv=3)
+    modelcv.fit(X_train, y_truth)
+    logging.info('cross-validation score is '+ str(modelcv.scores_))
 
 
     # train logistic regression
