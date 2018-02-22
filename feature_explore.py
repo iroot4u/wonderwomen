@@ -29,11 +29,22 @@ print "*** Drop NA ***"
 
 # correlation matrix of variables
 corr = dropna.corr()
-print "Correlation of Variables to Class"
-print corr.sort_values('is_female', ascending=False)['is_female']
+corr_sorted = corr.sort_values('is_female', ascending=False)
+top_ten_corr = corr_sorted[:10]
+top_ten_names = top_ten_corr.index
 
-print "Correlation of all Variables"
-print corr.sort_values('is_female', ascending=False)
+# print "Correlation of Variables to Class"
+# print corr_sorted['is_female']
+# print top_ten_corr['is_female']
+
+# print "Correlation of all Variables"
+# print corr
+# print top_ten_corr
+
+# compare male vs. female distributions of top ten variables
+top_ten_dropna = dropna[top_ten_names]
+top_ten_dropna.groupby('is_female').hist()
+plt.show(block=True)
 
 # # correlation matrix visualization
 # sns.heatmap(corr,
