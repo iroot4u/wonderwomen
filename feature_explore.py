@@ -1,72 +1,83 @@
+import logging
+import time
 import pandas as pd
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-#import seaborn as sns
+import seaborn as sns
 #from sklearn.preprocessing import OneHotEncoder
 
+# The functions below only work on Dataframe type objects.
+# One hot encoder returns a SparseMatrix type object.
 
-## import data
-dataset = pd.read_csv('data/train.csv', header=0)
-target = dataset['is_female']
+class DataFrame(object):
+    def __init__(self, df, title):
+      self.df = df
+      self.title = title
+      self.corr = self.df.corr()
+      self.corr_sorted = self.df.corr().sort_values('is_female', ascending=False)
 
-## remove training id and class
-dataset.drop(labels=['train_id', 'is_female'], axis=1, inplace =True)
-dataset.insert(0, 'is_female', target)
+## summary statistics
+def summarize(DataFrame):
+    print "Summary for %s" % (DataFrame.title)
+    print DataFrame.df.describe()
+
+## summary statistic visualization
+def boxplotter(DataFrame):
+    # col_list = range(10)
+    # pd.options.display.mpl_style = 'default'
+    # print "Variable Boxplots"
+    # DataFrame.df.iloc[:, col_list].boxplot()
+    # plt.show(block=True)
+    return
+
+# sort correlation matrix based on correlation with 'is_female'
+def top_n(DataFrame, n):
+    top_n_corr = DataFrame.corr_sorted[:n]
+    top_n_names = top_n_corr.index
+    print "Correlation of Variables to Class"
+    print top_n_corr['is_female']
+    return top_n_corr, top_n_names
+
+# compare male vs. female distributions for list of features (ie. top ten features)
+def histogram_by_class(DataFrame, feature_list):
+    selected_df = DataFrame.df[feature_list]
+    selected_df.groupby('is_female').hist()
+    plt.show(block=True)
+    return
+
+# correlation matrix visualization
+def corr_heatmap(corr):
+    print corr.shape
+    plt.interactive(False)
+    sns.heatmap(corr,
+                xticklabels=corr.columns.values,
+                yticklabels=corr.columns.values)
+    #m.savefig("out.pdf")
+    plt.show(block=True)
+    time.sleep(100)
+    return
+
+def main():
+    dataset = pd.read_csv('data/train.csv', header=0)
+    target = dataset['is_female']
+
+    ## remove training id and class
+    dataset.drop(labels=['train_id', 'is_female'], axis=1, inplace=True)
+    dataset.insert(0, 'is_female', target)
 
 
-### *** DROP NA SECTION *** ###
-dropna = dataset.dropna(axis=1)
-print "*** Drop NA ***"
-
-# # summary statistics
-# print "Summary"
-# print dropna.describe()
-
-# # summary statistic visualization
-# print "Variable Boxplots"
-# pd.options.display.mpl_style = 'default'
-# dropna.iloc[:, range(10)].boxplot()
-# plt.show(block=True)
-
-# correlation matrix of variables
-corr = dropna.corr()
-corr_sorted = corr.sort_values('is_female', ascending=False)
-top_ten_corr = corr_sorted[:10]
-top_ten_names = top_ten_corr.index
-
-# print "Correlation of Variables to Class"
-# print corr_sorted['is_female']
-# print top_ten_corr['is_female']
-
-# print "Correlation of all Variables"
-# print corr
-# print top_ten_corr
-
-# compare male vs. female distributions of top ten variables
-top_ten_dropna = dropna[top_ten_names]
-top_ten_dropna.groupby('is_female').hist()
-plt.show(block=True)
-
-# # correlation matrix visualization
-# sns.heatmap(corr,
-#              xticklabels=corr.columns.values,
-#              yticklabels=corr.columns.values)
+    ### DROP NA DATASET ###
+    dropna = DataFrame(dataset.dropna(axis=1), 'DropNAs')
+    summarize(dropna)
+    boxplotter(dropna)
+    top_10_corr, top_10_names = top_n(dropna, 10)
+    histogram_by_class(dropna, top_10_names)
+    corr_heatmap(top_10_corr[top_10_names])
 
 
-# ### FILL NA WITH VALUE SECTION ###
-# # replace NA columns with value -1
-# dataset_fillna = dataset.fillna(-1)
-#
-# print "Fill NA Summary"
-# print dataset_fillna.describe()
-#
-#
-#
-# ### ONE HOT ENCODED SECTION ###
-# # one-hot encode categorical variables
-# enc = OneHotEncoder()
-# enc.fit(dataset_dropna)
-# dataset_enc = enc.transform(dataset_dropna)
-#
-# print "One Hot Encoded Summary"
-# print dataset_enc.describe()
-
+if __name__ == "__main__":
+    start_time = time.time()
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s  %(levelname)s:  %(message)s')
+    main()
+    logging.info("process ran for " + str(time.time() - start_time) + " seconds")
