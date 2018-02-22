@@ -3,7 +3,7 @@ from sklearn import preprocessing
 from numpy import genfromtxt, savetxt
 from pandas import read_csv
 import pandas as pd
-from sklearn.model_selection import train_test_split
+
 from sklearn.cross_validation import cross_val_score
 import numpy as np
 
@@ -28,8 +28,7 @@ rf.fit(train, target)
 y_predict = rf.predict(testset)
 
 y_out = pd.DataFrame(y_predict, columns=['is_female'])
-y_out.to_csv('results.csv', index_label='test_id')
-
+y_out.to_csv('results_rf.csv', index_label='test_id')
 
 #print x_train.shape, y_train.shape
 #print x_train.shape, y_train.shape
