@@ -1,17 +1,22 @@
-from sklearn.ensemble import RandomForestClassifier
-from sklearn import preprocessing
-from numpy import genfromtxt, savetxt
+print(__doc__)
 from pandas import read_csv
 import pandas as pd
-
-from sklearn.cross_validation import cross_val_score
 import numpy as np
+import matplotlib.pyplot as plt
+from numpy import genfromtxt, savetxt
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.datasets import make_classification
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn import preprocessing
+from sklearn.cross_validation import cross_val_score
 
 dataset = read_csv('data/train.csv', header=0)
 target = dataset['is_female']
-dataset.drop(labels=['is_female'], axis=1, inplace = True)
+dataset.drop(labels=['is_female'], axis=1, inplace=True)
 dataset.insert(0, 'is_female', target)
-
+random = pd.DataFrame()
+random['randNumCol'] = np.random.randint(1, 6, dataset.shape[0])
+dataset.insert(len(dataset.columns), 'randNumCol', random)
 print len(dataset.columns)
 dataset = dataset.dropna(axis=1)
 #dataset = dataset.fillna(-1)
@@ -19,16 +24,38 @@ print len(dataset.columns)
 
 testset = read_csv('data/test.csv', header=0)
 train = dataset[dataset.columns[2:]]
-testset = testset[train.columns]
-
-#x_train, x_test, y_train, y_test = train_test_split(train, target, test_size=0.4, random_state=0)
+features = list(train.columns.values)
+#testset = testset[train.columns]  # don't need this for random feature test
 
 rf = RandomForestClassifier(n_estimators=100)
 rf.fit(train, target)
-y_predict = rf.predict(testset)
+importances = rf.feature_importances_
+std = np.std([tree.feature_importances_ for tree in rf.estimators_],
+             axis=0)
+indices = np.argsort(importances)[::-1]
 
+# print the feature ranking
+print("Feature ranking:")
+
+for f in range(train.shape[1]):
+    print("%d. feature %d %s (%f)" % (f + 1, indices[f], features[indices[f]], importances[indices[f]]))
+
+# plot the feature importances of the forest
+plt.figure()
+plt.title("Feature importances")
+plt.bar(range(train.shape[1]), importances[indices],
+       color="r", yerr=std[indices], align="center")
+plt.xticks(range(train.shape[1]), indices)
+plt.xlim([-1, train.shape[1]])
+plt.show()
+
+y_predict = rf.predict(testset)
 y_out = pd.DataFrame(y_predict, columns=['is_female'])
 y_out.to_csv('results_rf.csv', index_label='test_id')
+
+
+# old code
+#x_train, x_test, y_train, y_test = train_test_split(train, target, test_size=0.4, random_state=0)
 
 #print x_train.shape, y_train.shape
 #print x_train.shape, y_train.shape

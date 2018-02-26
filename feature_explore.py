@@ -1,15 +1,19 @@
 import logging
 import time
 import pandas as pd
+
+#from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import seaborn as sns
-#from sklearn.preprocessing import OneHotEncoder
+
 
 # The functions below only work on Dataframe type objects.
 # One hot encoder returns a SparseMatrix type object.
-
 class DataFrame(object):
     def __init__(self, df, title):
       self.df = df
@@ -59,22 +63,22 @@ def corr_heatmap(corr):
     return
 
 def main():
+
+    # load data
     dataset = pd.read_csv('data/train.csv', header=0)
     target = dataset['is_female']
 
-    ## remove training id and class
-    dataset.drop(labels=['train_id', 'is_female'], axis=1, inplace=True)
+    # remove training id and class
+    features = dataset.drop(labels=['train_id', 'is_female'], axis=1, inplace=True)
     dataset.insert(0, 'is_female', target)
 
-
-    ### DROP NA DATASET ###
+    # dropna dataset tests
     dropna = DataFrame(dataset.dropna(axis=1), 'DropNAs')
     summarize(dropna)
     boxplotter(dropna)
     top_10_corr, top_10_names = top_n(dropna, 10)
     histogram_by_class(dropna, top_10_names)
     corr_heatmap(top_10_corr[top_10_names])
-
 
 if __name__ == "__main__":
     start_time = time.time()
