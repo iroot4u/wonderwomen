@@ -2,6 +2,8 @@ print(__doc__)
 from pandas import read_csv
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from numpy import genfromtxt, savetxt
 from sklearn.ensemble import RandomForestClassifier
@@ -25,7 +27,6 @@ print len(dataset.columns)
 testset = read_csv('data/test.csv', header=0)
 train = dataset[dataset.columns[2:]]
 features = list(train.columns.values)
-#testset = testset[train.columns]  # don't need this for random feature test
 
 rf = RandomForestClassifier(n_estimators=100)
 rf.fit(train, target)
@@ -49,17 +50,18 @@ plt.xticks(range(train.shape[1]), indices)
 plt.xlim([-1, train.shape[1]])
 plt.show()
 
-y_predict = rf.predict(testset)
-y_out = pd.DataFrame(y_predict, columns=['is_female'])
-y_out.to_csv('results_rf.csv', index_label='test_id')
+# testset = testset[train.columns]  # don't need this for random feature test
+# y_predict = rf.predict(testset)
+# y_out = pd.DataFrame(y_predict, columns=['is_female'])
+# y_out.to_csv('results_rf.csv', index_label='test_id')
+#
 
-
-# old code
-#x_train, x_test, y_train, y_test = train_test_split(train, target, test_size=0.4, random_state=0)
-
-#print x_train.shape, y_train.shape
-#print x_train.shape, y_train.shape
-
+#**** old code*******
+# x_train, x_test, y_train, y_test = train_test_split(train, target, test_size=0.4, random_state=0)
+#
+# print x_train.shape, y_train.shape
+# print x_train.shape, y_train.shape
+#
 # dataset.fillna(-1)
 #
 # coltypes = dataset.columns.to_series().groupby(dataset.dtypes).groups
@@ -71,7 +73,7 @@ y_out.to_csv('results_rf.csv', index_label='test_id')
 #     #print dataset[str(obj)].dtype
 #     dataset[str(obj)] = number.fit_transform(dataset[str(obj)])
 #     #print dataset[str(obj)].dtype
-
+#
 #
 # dataset.fillna(-1)
 # dataset.isnull().any()
