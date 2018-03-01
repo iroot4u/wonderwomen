@@ -12,48 +12,72 @@ from sklearn.ensemble import ExtraTreesClassifier
 from sklearn import preprocessing
 from sklearn.cross_validation import cross_val_score
 
+features2keep = read_csv('most_important_features.csv')
+features2keep = features2keep['feature'].values.tolist()
+features2keep.append('is_female')
+
 dataset = read_csv('data/train.csv', header=0)
 target = dataset['is_female']
 dataset.drop(labels=['is_female'], axis=1, inplace=True)
 dataset.insert(0, 'is_female', target)
 random = pd.DataFrame()
-random['randNumCol'] = np.random.randint(1, 6, dataset.shape[0])
-dataset.insert(len(dataset.columns), 'randNumCol', random)
-print len(dataset.columns)
+# random['randNumCol'] = np.random.randint(1, 6, dataset.shape[0])
+# dataset.insert(len(dataset.columns), 'randNumCol', random)
+# print len(dataset.columns)
 dataset = dataset.dropna(axis=1)
 #dataset = dataset.fillna(-1)
-print len(dataset.columns)
+# print len(dataset.columns)
+dataset = dataset.filter(items=features2keep)
 
+X_train = dataset.drop(labels=['is_female'], axis=1)
+y_truth = dataset['is_female']
+
+
+# cross-validate random forest for error estimation
+itrain = range(int(0.7*len(dataset)))
+itest = range(itrain[len(itrain)-1]+1, len(dataset))
+rf = RandomForestClassifier(n_estimators=100)
+rf.fit(X_train.iloc[itrain], y_truth[itrain])
+print('random forest accuracy = ' + str(rf.score(X_train.iloc[itest], y_truth[itest])))
+
+
+
+# read in test set and apply random forest
 testset = read_csv('data/test.csv', header=0)
-train = dataset[dataset.columns[2:]]
-features = list(train.columns.values)
+testset = testset.filter(items=features2keep)
+# features = list(train.columns.values)
 
 rf = RandomForestClassifier(n_estimators=100)
-rf.fit(train, target)
-importances = rf.feature_importances_
-std = np.std([tree.feature_importances_ for tree in rf.estimators_],
-             axis=0)
-indices = np.argsort(importances)[::-1]
+rf.fit(X_train, y_truth)
 
-# print the feature ranking
-print("Feature ranking:")
+# predict on testset
+y_predict = rf.predict(testset)
 
-for f in range(train.shape[1]):
-    print("%d. feature %d %s (%f)" % (f + 1, indices[f], features[indices[f]], importances[indices[f]]))
+# write to file
+y_out = pd.DataFrame(y_predict, columns=['is_female'])
+y_out.to_csv('results_rf_features_subset.csv', index_label='test_id')
 
-# plot the feature importances of the forest
-plt.figure()
-plt.title("Feature importances")
-plt.bar(range(train.shape[1]), importances[indices],
-       color="r", yerr=std[indices], align="center")
-plt.xticks(range(train.shape[1]), indices)
-plt.xlim([-1, train.shape[1]])
-plt.show()
 
-# # write 25 most important features to file
-# features25 = pd.DataFrame([features[i] for i in indices[0:25]])
-# features25.to_csv('most_important_features.csv', header=['feature'], index=False)
 
+# importances = rf.feature_importances_
+# std = np.std([tree.feature_importances_ for tree in rf.estimators_],
+#              axis=0)
+# indices = np.argsort(importances)[::-1]
+#
+# # print the feature ranking
+# print("Feature ranking:")
+#
+# for f in range(train.shape[1]):
+#     print("%d. feature %d %s (%f)" % (f + 1, indices[f], features[indices[f]], importances[indices[f]]))
+#
+# # plot the feature importances of the forest
+# plt.figure()
+# plt.title("Feature importances")
+# plt.bar(range(train.shape[1]), importances[indices],
+#        color="r", yerr=std[indices], align="center")
+# plt.xticks(range(train.shape[1]), indices)
+# plt.xlim([-1, train.shape[1]])
+# plt.show()
 
 # testset = testset[train.columns]  # don't need this for random feature test
 # y_predict = rf.predict(testset)
